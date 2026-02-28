@@ -11,7 +11,7 @@ export interface RtkConfig {
 	techniques: {
 		ansiStripping: boolean;
 		truncation: { enabled: boolean; maxChars: number };
-		sourceCodeFiltering: FilterLevel;
+		sourceCodeFiltering: { enabled: boolean; level: FilterLevel };
 		smartTruncation: { enabled: boolean; maxLines: number };
 		testOutputAggregation: boolean;
 		buildOutputFiltering: boolean;
@@ -28,7 +28,7 @@ export const DEFAULT_CONFIG: RtkConfig = {
 	techniques: {
 		ansiStripping: true,
 		truncation: { enabled: true, maxChars: 10000 },
-		sourceCodeFiltering: "minimal",
+		sourceCodeFiltering: { enabled: true, level: "minimal" },
 		smartTruncation: { enabled: true, maxLines: 200 },
 		testOutputAggregation: true,
 		buildOutputFiltering: true,
@@ -55,6 +55,10 @@ export function mergeConfig(base: RtkConfig, override: Partial<RtkConfig>): RtkC
 			truncation: {
 				...base.techniques.truncation,
 				...(override.techniques?.truncation || {}),
+			},
+			sourceCodeFiltering: {
+				...base.techniques.sourceCodeFiltering,
+				...(override.techniques?.sourceCodeFiltering || {}),
 			},
 			smartTruncation: {
 				...base.techniques.smartTruncation,
