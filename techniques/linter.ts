@@ -24,7 +24,12 @@ export function isLinterCommand(command: string | undefined | null): boolean {
 	}
 
 	const cmdLower = command.toLowerCase();
-	return LINTER_COMMANDS.some((lc) => cmdLower.includes(lc));
+	return LINTER_COMMANDS.some((lc) => {
+		const escaped = lc.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+		// Match the command name only at a command position, not as a substring.
+		// Prevents "black" matching "blacklist", "ruff" matching paths, etc.
+		return new RegExp(`(?:^|[|;&]\\s*)${escaped}(?:\\s|$|[|;&])`, "m").test(cmdLower);
+	});
 }
 
 function parseIssues(output: string, linterType: string): Issue[] {
