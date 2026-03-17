@@ -119,6 +119,29 @@ The plugin intercepts `tool_result` events and applies appropriate filtering bas
 
 Metrics are tracked in-memory and can be viewed with `/rtk-stats`.
 
+## Known issues
+
+### `isSearchCommand` / `isLinterCommand`: substring false positives
+
+`includes()` matches anywhere in the command string, not just at the command name position:
+
+| Check | False positive examples |
+|---|---|
+| `includes("ag")` | `npm run agent`, `manage.py`, any path containing "package" |
+| `includes("find")` | paths containing "find", `findall()` calls |
+| `includes("black")` | `blacklist`, any path with "black" in it |
+| `includes("ruff")` | any path containing "ruff" |
+
+When a false positive fires the command's output is silently replaced with a reformatted summary, discarding the real output the agent needed. `isTestCommand` had the same bug and was fixed in commit 2245040 — `isSearchCommand` and `isLinterCommand` need the same treatment.
+
+### `isGitCommand`: `startsWith` never matches in practice
+
+`startsWith("git status")` requires the command to begin with `git`. Agents routinely prefix with a directory change: `cd /repo && git status`. In practice this means gitCompaction is silently inert for compound commands.
+
+### `compactStatus`: corrupts verbose `git status` output
+
+`compactStatus` expects porcelain format (`git status -s` / `--short`). When called with plain `git status` output, the parser misreads English prose as two-char status codes — `"Changes not staged for commit:"` is read as `status[0] = 'C'` (staged), producing output like `"Staged: 1 files / nges not staged for commit:"` while real modified files go unreported.
+
 ## License
 
 MIT - Based on the RTK specification

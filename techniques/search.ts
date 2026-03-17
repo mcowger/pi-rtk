@@ -6,7 +6,13 @@ export function isSearchCommand(command: string | undefined | null): boolean {
 	}
 
 	const cmdLower = command.toLowerCase();
-	return SEARCH_COMMANDS.some((sc) => cmdLower.includes(sc));
+	return SEARCH_COMMANDS.some((sc) => {
+		const escaped = sc.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+		// Match the command name only at a command position (start of string or
+		// after a shell operator), not as a substring of another word.
+		// Prevents "ag" matching "agent"/"package", "find" matching path components.
+		return new RegExp(`(?:^|[|;&]\\s*)${escaped}(?:\\s|$|[|;&])`, "m").test(cmdLower);
+	});
 }
 
 interface SearchResult {
